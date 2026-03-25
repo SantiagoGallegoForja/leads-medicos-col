@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Leads Medicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0f1a;
+  --surface: #141a2e;
+  --surface2: #1b2340;
+  --surface3: #222b4a;
+  --border: #2a3458;
+  --border-light: #354170;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --accent-glow: rgba(99,102,241,.15);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,.12);
+  --orange: #f59e0b;
+  --orange-bg: rgba(245,158,11,.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,.12);
+  --pink: #ec4899;
+  --blue: #3b82f6;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+::selection { background:var(--accent); color:#fff; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--surface); }
+::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:3px; }
+
+/* Layout */
+.app { display:grid; grid-template-columns:280px 1fr; grid-template-rows:auto 1fr; height:100vh; }
+
+/* Sidebar */
+.sidebar { grid-row:1/-1; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sidebar-header { padding:24px 20px 16px; border-bottom:1px solid var(--border); }
+.logo { font-size:18px; font-weight:800; letter-spacing:-.3px; }
+.logo span { color:var(--accent2); }
+.logo-sub { font-size:11px; color:var(--text3); margin-top:4px; letter-spacing:.3px; }
+.sidebar-body { flex:1; overflow-y:auto; padding:16px 14px; }
+
+.filter-section { margin-bottom:20px; }
+.filter-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; padding:0 6px; }
+
+.search-box { position:relative; margin-bottom:16px; }
+.search-box input { width:100%; padding:10px 12px 10px 36px; background:var(--surface2); border:1.5px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:13px; outline:none; transition:border .2s; }
+.search-box input:focus { border-color:var(--accent); }
+.search-box svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text3); }
+
+select.filter-select { width:100%; padding:9px 12px; background:var(--surface2); border:1.5px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:13px; outline:none; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; margin-bottom:10px; }
+select.filter-select:focus { border-color:var(--accent); }
+select option { background:var(--surface2); color:var(--text); }
+
+.chip-group { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { padding:5px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; border:1.5px solid var(--border); background:transparent; color:var(--text2); transition:all .15s; user-select:none; }
+.chip:hover { border-color:var(--accent); color:var(--accent2); }
+.chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+.sidebar-footer { padding:14px; border-top:1px solid var(--border); }
+.sidebar-stats { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.mini-stat { background:var(--surface2); padding:10px; border-radius:8px; text-align:center; }
+.mini-stat .num { font-size:18px; font-weight:800; color:var(--accent2); }
+.mini-stat .label { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+
+/* Top bar */
+.topbar { padding:14px 24px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.results-count { font-size:13px; color:var(--text2); }
+.results-count b { color:var(--text); font-weight:700; }
+
+.topbar-actions { display:flex; gap:8px; align-items:center; }
+.btn { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:none; transition:all .15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-ghost { background:transparent; color:var(--text2); border:1.5px solid var(--border); }
+.btn-ghost:hover { border-color:var(--accent); color:var(--accent2); }
+.btn-accent { background:var(--accent); color:#fff; }
+.btn-accent:hover { background:var(--accent2); }
+.btn-green { background:var(--green); color:#fff; }
+.btn-green:hover { opacity:.9; }
+
+.view-toggle { display:flex; background:var(--surface2); border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+.view-toggle button { padding:7px 12px; background:transparent; border:none; color:var(--text3); cursor:pointer; font-size:12px; font-weight:600; }
+.view-toggle button.active { background:var(--accent); color:#fff; }
+
+/* Main content */
+.main { overflow-y:auto; padding:16px 20px; background:var(--bg); }
+
+/* Cards view */
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:12px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; transition:all .2s; cursor:pointer; position:relative; }
+.card:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 8px 25px rgba(0,0,0,.3); transform:translateY(-1px); }
+
+.card-top { display:flex; gap:12px; margin-bottom:12px; }
+.card-avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; background:var(--surface3); flex-shrink:0; }
+.card-info { flex:1; min-width:0; }
+.card-name { font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-spec { font-size:11px; color:var(--text3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-badges { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+.badge { padding:2px 7px; border-radius:4px; font-size:10px; font-weight:600; }
+.badge-city { background:var(--accent-glow); color:var(--accent2); }
+.badge-online { background:var(--green-bg); color:var(--green); }
+.badge-rating { background:var(--orange-bg); color:var(--orange); }
+
+.card-contact { display:flex; flex-direction:column; gap:6px; }
+.card-contact-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); }
+.card-contact-item a { color:var(--accent2); text-decoration:none; }
+.card-contact-item a:hover { text-decoration:underline; }
+
+.card-socials { display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; }
+.social-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:5px; font-size:10px; font-weight:600; text-decoration:none; transition:opacity .15s; }
+.social-pill:hover { opacity:.8; }
+.s-ig { background:linear-gradient(45deg,#f09433,#dc2743,#bc1888); color:#fff; }
+.s-fb { background:#1877f2; color:#fff; }
+.s-li { background:#0a66c2; color:#fff; }
+.s-yt { background:#ff0000; color:#fff; }
+.s-tw { background:#1da1f2; color:#fff; }
+.s-tk { background:#010101; color:#fff; }
+.s-web { background:var(--surface3); color:var(--text2); }
+.s-wa { background:#25d366; color:#fff; }
+
+/* Card actions */
+.card-actions { position:absolute; top:12px; right:12px; display:flex; gap:4px; opacity:0; transition:opacity .15s; }
+.card:hover .card-actions { opacity:1; }
+.card-action-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all .15s; }
+.card-action-btn.fav { background:var(--surface3); color:var(--text3); }
+.card-action-btn.fav.active { background:var(--orange-bg); color:var(--orange); }
+.card-action-btn.contacted { background:var(--surface3); color:var(--text3); }
+.card-action-btn.contacted.active { background:var(--green-bg); color:var(--green); }
+
+/* Table view */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th { position:sticky; top:0; background:var(--surface2); padding:10px 12px; font-size:10px; text-transform:uppercase; letter-spacing:.7px; color:var(--text3); text-align:left; border-bottom:2px solid var(--border); cursor:pointer; white-space:nowrap; z-index:5; }
+thead th:hover { color:var(--accent2); }
+tbody td { padding:10px 12px; font-size:12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tbody tr { transition:background .1s; }
+tbody tr:hover { background:var(--surface2); }
+
+.td-name { font-weight:600; color:var(--text); min-width:180px; }
+.td-spec { color:var(--text3); font-size:11px; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.td-contact a { color:var(--accent2); text-decoration:none; font-size:11px; display:block; margin-bottom:2px; }
+.td-contact a:hover { text-decoration:underline; }
+
+/* Pagination */
+.pagination { display:flex; justify-content:center; align-items:center; gap:6px; padding:20px 0; }
+.pg-btn { padding:7px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; font-size:12px; font-weight:500; }
+.pg-btn:hover { border-color:var(--accent); color:var(--accent2); }
+.pg-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.pg-btn:disabled { opacity:.3; cursor:default; }
+.pg-info { font-size:12px; color:var(--text3); margin:0 8px; }
+
+/* Detail Modal */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:300; align-items:center; justify-content:center; }
+.modal-bg.open { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); max-width:640px; width:95%; max-height:85vh; overflow-y:auto; position:relative; }
+.modal-header { padding:24px 24px 0; display:flex; gap:16px; align-items:start; }
+.modal-avatar { width:64px; height:64px; border-radius:50%; object-fit:cover; background:var(--surface3); }
+.modal-title { flex:1; }
+.modal-title h2 { font-size:20px; font-weight:800; }
+.modal-title .mspec { color:var(--text3); font-size:13px; margin-top:2px; }
+.modal-close { position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:8px; border:none; background:var(--surface3); color:var(--text3); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--border); color:var(--text); }
+
+.modal-body { padding:20px 24px 24px; }
+.modal-section { margin-bottom:18px; }
+.modal-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+.modal-section-body { font-size:13px; color:var(--text2); line-height:1.7; }
+
+.modal-contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.modal-contact-item { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--surface2); border-radius:8px; font-size:12px; cursor:pointer; transition:background .15s; text-decoration:none; color:var(--text); }
+.modal-contact-item:hover { background:var(--surface3); }
+.modal-contact-item .mci-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+.modal-contact-item .mci-text { min-width:0; }
+.modal-contact-item .mci-label { font-size:10px; color:var(--text3); }
+.modal-contact-item .mci-value { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.modal-socials { display:flex; flex-wrap:wrap; gap:8px; }
+
+.modal-notes { width:100%; padding:10px 12px; background:var(--surface2); border:1.5px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; resize:vertical; min-height:60px; outline:none; font-family:inherit; }
+.modal-notes:focus { border-color:var(--accent); }
+.modal-notes::placeholder { color:var(--text3); }
+
+.modal-btn-row { display:flex; gap:8px; margin-top:16px; }
+
+/* Status indicator */
+.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
+.status-new { background:var(--blue); }
+.status-fav { background:var(--orange); }
+.status-contacted { background:var(--green); }
+
+/* Empty state */
+.empty-state { text-align:center; padding:80px 20px; color:var(--text3); }
+.empty-state svg { width:48px; height:48px; margin-bottom:16px; opacity:.3; }
+.empty-state p { font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Lead<span>Scope</span></div>
+      <div class="logo-sub">CRM Leads Medicos - COL</div>
+    </div>
+    <div class="sidebar-body">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar doctor, clinica...">
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Ciudad</div>
+        <select class="filter-select" id="filterCity">
+          <option value="">Todas las ciudades</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Especialidad</div>
+        <select class="filter-select" id="filterSpec">
+          <option value="">Todas las especialidades</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Tiene contacto</div>
+        <div class="chip-group">
+          <div class="chip" data-f="tel">Telefono</div>
+          <div class="chip" data-f="ig">Instagram</div>
+          <div class="chip" data-f="fb">Facebook</div>
+          <div class="chip" data-f="li">LinkedIn</div>
+          <div class="chip" data-f="em">Email</div>
+          <div class="chip" data-f="yt">YouTube</div>
+          <div class="chip" data-f="any">Cualquiera</div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Consulta online</div>
+        <div class="chip-group">
+          <div class="chip" data-f="online">Si</div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Estado del lead</div>
+        <div class="chip-group">
+          <div class="chip" data-f="is-fav">Favoritos</div>
+          <div class="chip" data-f="is-contacted">Contactados</div>
+          <div class="chip" data-f="has-notes">Con notas</div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Opiniones minimas</div>
+        <select class="filter-select" id="filterRating">
+          <option value="0">Sin filtro</option>
+          <option value="1">1+ opiniones</option>
+          <option value="10">10+ opiniones</option>
+          <option value="50">50+ opiniones</option>
+          <option value="100">100+ opiniones</option>
+          <option value="200">200+ opiniones</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-stats" id="sidebarStats"></div>
+    </div>
+  </aside>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="results-count" id="resultsCount"></div>
+    <div class="topbar-actions">
+      <div class="view-toggle">
+        <button class="active" onclick="setView('cards')" id="btnCards">Tarjetas</button>
+        <button onclick="setView('table')" id="btnTable">Tabla</button>
+      </div>
+      <button class="btn btn-ghost" onclick="exportCSV()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+      <button class="btn btn-ghost" onclick="copyPhones()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copiar telefonos
+      </button>
+      <button class="btn btn-accent" onclick="exportContactados()">Exportar contactados</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="main" id="mainArea">
+    <div id="cardsView" class="cards-grid"></div>
+    <div id="tableView" class="table-wrap" style="display:none"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <div class="modal-header" id="modalHeader"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface3);color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:400;display:none;border:1px solid var(--border)"></div>
+
+<script src="_data.js"></script>
+<script>
+const SPEC_NAMES={cardiologo:'Cardiologo','cirujano-general':'Cirujano General','cirujano-plastico':'Cirujano Plastico','cirujano-vascular':'Cirujano Vascular',dermatologo:'Dermatologo',endocrinologo:'Endocrinologo','especialista-en-tratamiento-del-dolor':'Esp. Dolor',fisioterapeuta:'Fisioterapeuta',gastroenterologo:'Gastroenterologo',geriatra:'Geriatra',ginecologo:'Ginecologo',hematologo:'Hematologo',infectologo:'Infectologo',internista:'Internista','medico-estetico':'Medico Estetico','medico-general':'Medico General',nefrologo:'Nefrologo',neumologo:'Neumologo',neurocirujano:'Neurocirujano',neurologo:'Neurologo',nutriologo:'Nutriologo',odontologo:'Odontologo',oftalmologo:'Oftalmologo',oncologo:'Oncologo','ortopedista-y-traumatologo':'Ortopedista',otorrinolaringologo:'Otorrino',pediatra:'Pediatra',psicologo:'Psicologo',psiquiatra:'Psiquiatra',reumatologo:'Reumatologo',urologo:'Urologo',coloproctolo:'Coloproctogo'};
+
+let allDoctors = DATA;
+let filtered = [];
+let currentPage = 1;
+let viewMode = 'cards';
+const PAGE_SIZE = 60;
+
+// Persistence (localStorage)
+let favs = JSON.parse(localStorage.getItem('ls_favs')||'{}');
+let contacted = JSON.parse(localStorage.getItem('ls_contacted')||'{}');
+let notes = JSON.parse(localStorage.getItem('ls_notes')||'{}');
+function saveFavs(){ localStorage.setItem('ls_favs',JSON.stringify(favs)); }
+function saveContacted(){ localStorage.setItem('ls_contacted',JSON.stringify(contacted)); }
+function saveNotes(){ localStorage.setItem('ls_notes',JSON.stringify(notes)); }
+
+function uid(d){ return d.url||d.n; }
+
+// Init
+(function init(){
+  // Populate city filter
+  const cities=[...new Set(allDoctors.map(d=>d.c).filter(Boolean))].sort();
+  const citySelect=document.getElementById('filterCity');
+  cities.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; citySelect.appendChild(o); });
+
+  // Populate spec filter
+  const specs=[...new Set(allDoctors.map(d=>d.es).filter(Boolean))].sort();
+  const specSelect=document.getElementById('filterSpec');
+  specs.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=SPEC_NAMES[s]||s; specSelect.appendChild(o); });
+
+  // Events
+  document.getElementById('searchInput').addEventListener('input',debounce(applyFilters,250));
+  document.getElementById('filterCity').addEventListener('change',applyFilters);
+  document.getElementById('filterSpec').addEventListener('change',applyFilters);
+  document.getElementById('filterRating').addEventListener('change',applyFilters);
+
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click',()=>{ c.classList.toggle('active'); applyFilters(); });
+  });
+
+  updateSidebarStats();
+  applyFilters();
+})();
+
+function updateSidebarStats(){
+  const t=allDoctors.length;
+  const tel=allDoctors.filter(d=>d.tel).length;
+  const ig=allDoctors.filter(d=>d.ig).length;
+  const fav=Object.keys(favs).length;
+  const cont=Object.keys(contacted).length;
+  document.getElementById('sidebarStats').innerHTML=`
+    <div class="mini-stat"><div class="num">${t.toLocaleString()}</div><div class="label">Total</div></div>
+    <div class="mini-stat"><div class="num">${tel.toLocaleString()}</div><div class="label">Con tel</div></div>
+    <div class="mini-stat"><div class="num">${ig.toLocaleString()}</div><div class="label">Instagram</div></div>
+    <div class="mini-stat"><div class="num">${fav}</div><div class="label">Favoritos</div></div>
+  `;
+}
+
+function applyFilters(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const city=document.getElementById('filterCity').value;
+  const spec=document.getElementById('filterSpec').value;
+  const minRating=parseFloat(document.getElementById('filterRating').value)||0;
+  const chips=[...document.querySelectorAll('.chip.active')].map(c=>c.dataset.f);
+
+  filtered=allDoctors.filter(d=>{
+    if(city && d.c!==city) return false;
+    if(spec && d.es!==spec) return false;
+    if(minRating && (d.op||0)<minRating) return false;
+    if(q){
+      const h=[d.n,d.e,d.dir,d.tel,d.em,d.bio].filter(Boolean).join(' ').toLowerCase();
+      if(!h.includes(q)) return false;
+    }
+    for(const f of chips){
+      if(f==='any' && !(d.tel||d.ig||d.fb||d.li||d.em||d.yt||d.tw||d.tk||d.web)) return false;
+      if(f==='online' && d.online!=='Si') return false;
+      if(f==='is-fav' && !favs[uid(d)]) return false;
+      if(f==='is-contacted' && !contacted[uid(d)]) return false;
+      if(f==='has-notes' && !notes[uid(d)]) return false;
+      if(['tel','ig','fb','li','em','yt'].includes(f) && !d[f]) return false;
+    }
+    return true;
+  });
+
+  currentPage=1;
+  render();
+}
+
+function render(){
+  const start=(currentPage-1)*PAGE_SIZE;
+  const page=filtered.slice(start,start+PAGE_SIZE);
+  document.getElementById('resultsCount').innerHTML=`<b>${filtered.length.toLocaleString()}</b> doctores encontrados`;
+
+  if(viewMode==='cards') renderCards(page,start);
+  else renderTable(page,start);
+  renderPagination();
+}
+
+function renderCards(page,startIdx){
+  document.getElementById('cardsView').style.display='';
+  document.getElementById('tableView').style.display='none';
+
+  if(!page.length){
+    document.getElementById('cardsView').innerHTML='<div class="empty-state"><p>No se encontraron doctores con esos filtros</p></div>';
+    return;
+  }
+
+  document.getElementById('cardsView').innerHTML=page.map((d,i)=>{
+    const id=uid(d);
+    const foto=d.foto?(d.foto.startsWith('//')?'https:'+d.foto:d.foto):'';
+    const isFav=!!favs[id];
+    const isCont=!!contacted[id];
+
+    let badges='';
+    if(d.c) badges+=`<span class="badge badge-city">${esc(d.c)}</span>`;
+    if(d.online==='Si') badges+=`<span class="badge badge-online">Online</span>`;
+    if(d.op) badges+=`<span class="badge badge-rating">${d.op} opiniones</span>`;
+    if(d.pre) badges+=`<span class="badge" style="background:var(--surface3);color:var(--text2)">${esc(String(d.pre))}</span>`;
+
+    let contact='';
+    if(d.tel){
+      const first=d.tel.split(',')[0].trim().replace(/\s/g,'');
+      contact+=`<div class="card-contact-item" onclick="event.stopPropagation()"><span style="color:var(--green)">&#9742;</span><a href="tel:${esc(first)}">${esc(d.tel)}</a></div>`;
+    }
+    if(d.em) contact+=`<div class="card-contact-item" onclick="event.stopPropagation()"><span style="color:var(--red)">@</span><a href="mailto:${esc(d.em)}">${esc(d.em)}</a></div>`;
+
+    let socials='';
+    if(d.tel){
+      const wa=d.tel.split(',')[0].trim().replace(/[\s()-]/g,'').replace(/^\+?57/,'57');
+      socials+=`<a class="social-pill s-wa" href="https://wa.me/${wa}" target="_blank" onclick="event.stopPropagation()">WA</a>`;
+    }
+    if(d.ig) socials+=`<a class="social-pill s-ig" href="${esc(d.ig)}" target="_blank" onclick="event.stopPropagation()">IG</a>`;
+    if(d.fb) socials+=`<a class="social-pill s-fb" href="${esc(d.fb)}" target="_blank" onclick="event.stopPropagation()">FB</a>`;
+    if(d.li) socials+=`<a class="social-pill s-li" href="${esc(d.li)}" target="_blank" onclick="event.stopPropagation()">IN</a>`;
+    if(d.yt) socials+=`<a class="social-pill s-yt" href="${esc(d.yt)}" target="_blank" onclick="event.stopPropagation()">YT</a>`;
+    if(d.tw) socials+=`<a class="social-pill s-tw" href="${esc(d.tw)}" target="_blank" onclick="event.stopPropagation()">X</a>`;
+    if(d.web) socials+=`<a class="social-pill s-web" href="${esc(d.web)}" target="_blank" onclick="event.stopPropagation()">Web</a>`;
+
+    return `<div class="card" onclick="showDetail(${startIdx+i})">
+      <div class="card-actions">
+        <button class="card-action-btn fav ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav(${startIdx+i})" title="Favorito">${isFav?'&#9733;':'&#9734;'}</button>
+        <button class="card-action-btn contacted ${isCont?'active':''}" onclick="event.stopPropagation();toggleContacted(${startIdx+i})" title="Contactado">${isCont?'&#10003;':'&#9711;'}</button>
+      </div>
+      <div class="card-top">
+        ${foto?`<img class="card-avatar" src="${esc(foto)}" loading="lazy" onerror="this.style.display='none'">`:'<div class="card-avatar"></div>'}
+        <div class="card-info">
+          <div class="card-name">${esc(d.n||'')}</div>
+          <div class="card-spec">${esc(d.e||'')}</div>
+          <div class="card-badges">${badges}</div>
+        </div>
+      </div>
+      <div class="card-contact">${contact}</div>
+      ${socials?`<div class="card-socials">${socials}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderTable(page,startIdx){
+  document.getElementById('cardsView').style.display='none';
+  document.getElementById('tableView').style.display='';
+
+  let html=`<table><thead><tr>
+    <th>Doctor</th><th>Especialidad</th><th>Ciudad</th><th>Opiniones</th><th>Telefono</th><th>Email</th><th>Instagram</th><th>Redes</th><th>Precio</th><th>Estado</th>
+  </tr></thead><tbody>`;
+
+  for(let i=0;i<page.length;i++){
+    const d=page[i];
+    const id=uid(d);
+    const isFav=!!favs[id];
+    const isCont=!!contacted[id];
+    let status='';
+    if(isCont) status='<span class="status-dot status-contacted"></span>Contactado';
+    else if(isFav) status='<span class="status-dot status-fav"></span>Favorito';
+    else status='<span class="status-dot status-new"></span>Nuevo';
+
+    let redes=[];
+    if(d.ig)redes.push('IG');if(d.fb)redes.push('FB');if(d.li)redes.push('IN');if(d.yt)redes.push('YT');if(d.tw)redes.push('X');
+
+    html+=`<tr onclick="showDetail(${startIdx+i})" style="cursor:pointer">
+      <td class="td-name">${esc(d.n||'')}</td>
+      <td class="td-spec">${esc(d.e||'')}</td>
+      <td>${esc(d.c||'')}</td>
+      <td>${d.op?d.op+' op.':'-'}</td>
+      <td class="td-contact">${d.tel?`<a href="tel:${esc(d.tel.split(',')[0].trim())}" onclick="event.stopPropagation()">${esc(d.tel)}</a>`:'-'}</td>
+      <td class="td-contact">${d.em?`<a href="mailto:${esc(d.em)}" onclick="event.stopPropagation()">${esc(d.em)}</a>`:'-'}</td>
+      <td class="td-contact">${d.ig?`<a href="${esc(d.ig)}" target="_blank" onclick="event.stopPropagation()">${extractHandle(d.ig)}</a>`:'-'}</td>
+      <td style="font-size:11px;color:var(--text3)">${redes.join(' ')}</td>
+      <td style="font-size:11px">${esc(String(d.pre||'-'))}</td>
+      <td style="font-size:11px">${status}</td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  document.getElementById('tableView').innerHTML=html;
+}
+
+function renderPagination(){
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  if(total<=1){document.getElementById('pagination').innerHTML='';return;}
+  const pages=getPageRange(currentPage,total);
+  let html=`<button class="pg-btn" ${currentPage<=1?'disabled':''} onclick="goPage(${currentPage-1})">&#8592;</button>`;
+  for(const p of pages){
+    if(p==='...') html+=`<span class="pg-info">...</span>`;
+    else html+=`<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html+=`<button class="pg-btn" ${currentPage>=total?'disabled':''} onclick="goPage(${currentPage+1})">&#8594;</button>`;
+  html+=`<span class="pg-info">Pag ${currentPage} de ${total}</span>`;
+  document.getElementById('pagination').innerHTML=html;
+}
+
+function getPageRange(c,t){
+  if(t<=7) return Array.from({length:t},(_,i)=>i+1);
+  const p=[1];
+  if(c>3)p.push('...');
+  for(let i=Math.max(2,c-1);i<=Math.min(t-1,c+1);i++)p.push(i);
+  if(c<t-2)p.push('...');
+  p.push(t);
+  return p;
+}
+
+function goPage(p){ currentPage=p; render(); document.getElementById('mainArea').scrollTo({top:0,behavior:'smooth'}); }
+
+function setView(v){
+  viewMode=v;
+  document.getElementById('btnCards').classList.toggle('active',v==='cards');
+  document.getElementById('btnTable').classList.toggle('active',v==='table');
+  render();
+}
+
+// Detail modal
+function showDetail(idx){
+  const d=filtered[idx]; if(!d) return;
+  const id=uid(d);
+  const foto=d.foto?(d.foto.startsWith('//')?'https:'+d.foto:d.foto):'';
+  const isFav=!!favs[id]; const isCont=!!contacted[id];
+
+  document.getElementById('modalHeader').innerHTML=`
+    ${foto?`<img class="modal-avatar" src="${esc(foto)}" onerror="this.style.display='none'">`:''}
+    <div class="modal-title">
+      <h2>${esc(d.n||'')}</h2>
+      <div class="mspec">${esc(d.e||'')} &mdash; ${esc(d.c||'')}</div>
+      ${d.op?`<div style="margin-top:6px;font-size:13px;color:var(--orange)">${d.op} opiniones</div>`:''}
+    </div>`;
+
+  let contactGrid='';
+  if(d.tel){
+    const first=d.tel.split(',')[0].trim().replace(/\s/g,'');
+    contactGrid+=`<a class="modal-contact-item" href="tel:${esc(first)}"><div class="mci-icon" style="background:var(--green)">&#9742;</div><div class="mci-text"><div class="mci-label">Telefono</div><div class="mci-value">${esc(d.tel)}</div></div></a>`;
+    const wa=first.replace(/[\s()-]/g,'').replace(/^\+?57/,'57');
+    contactGrid+=`<a class="modal-contact-item" href="https://wa.me/${wa}" target="_blank"><div class="mci-icon" style="background:#25d366">WA</div><div class="mci-text"><div class="mci-label">WhatsApp</div><div class="mci-value">Enviar mensaje</div></div></a>`;
+  }
+  if(d.em) contactGrid+=`<a class="modal-contact-item" href="mailto:${esc(d.em)}"><div class="mci-icon" style="background:var(--red)">@</div><div class="mci-text"><div class="mci-label">Email</div><div class="mci-value">${esc(d.em)}</div></div></a>`;
+  if(d.ig) contactGrid+=`<a class="modal-contact-item" href="${esc(d.ig)}" target="_blank"><div class="mci-icon" style="background:#e1306c">IG</div><div class="mci-text"><div class="mci-label">Instagram</div><div class="mci-value">${extractHandle(d.ig)}</div></div></a>`;
+  if(d.fb) contactGrid+=`<a class="modal-contact-item" href="${esc(d.fb)}" target="_blank"><div class="mci-icon" style="background:#1877f2">FB</div><div class="mci-text"><div class="mci-label">Facebook</div><div class="mci-value">${extractHandle(d.fb)}</div></div></a>`;
+  if(d.li) contactGrid+=`<a class="modal-contact-item" href="${esc(d.li)}" target="_blank"><div class="mci-icon" style="background:#0a66c2">IN</div><div class="mci-text"><div class="mci-label">LinkedIn</div><div class="mci-value">${extractHandle(d.li)}</div></div></a>`;
+  if(d.yt) contactGrid+=`<a class="modal-contact-item" href="${esc(d.yt)}" target="_blank"><div class="mci-icon" style="background:#ff0000">YT</div><div class="mci-text"><div class="mci-label">YouTube</div><div class="mci-value">Canal</div></div></a>`;
+  if(d.tw) contactGrid+=`<a class="modal-contact-item" href="${esc(d.tw)}" target="_blank"><div class="mci-icon" style="background:#1da1f2">X</div><div class="mci-text"><div class="mci-label">Twitter/X</div><div class="mci-value">${extractHandle(d.tw)}</div></div></a>`;
+  if(d.web) contactGrid+=`<a class="modal-contact-item" href="${esc(d.web)}" target="_blank"><div class="mci-icon" style="background:var(--text3)">W</div><div class="mci-text"><div class="mci-label">Web</div><div class="mci-value">${esc(d.web).substring(0,40)}</div></div></a>`;
+
+  let body='';
+  if(contactGrid) body+=`<div class="modal-section"><div class="modal-section-title">Contacto</div><div class="modal-contact-grid">${contactGrid}</div></div>`;
+  if(d.dir) body+=`<div class="modal-section"><div class="modal-section-title">Direccion</div><div class="modal-section-body">${esc(d.dir)}</div></div>`;
+  if(d.pre) body+=`<div class="modal-section"><div class="modal-section-title">Precios</div><div class="modal-section-body">${esc(String(d.pre))}</div></div>`;
+  if(d.bio) body+=`<div class="modal-section"><div class="modal-section-title">Biografia</div><div class="modal-section-body">${esc(d.bio)}</div></div>`;
+
+  body+=`<div class="modal-section"><div class="modal-section-title">Notas del comercial</div><textarea class="modal-notes" id="modalNotes" placeholder="Escribe notas sobre este lead..." oninput="saveNote('${esc(id)}')">${esc(notes[id]||'')}</textarea></div>`;
+
+  body+=`<div class="modal-btn-row">
+    <button class="btn ${isFav?'btn-accent':'btn-ghost'}" onclick="toggleFav(${idx});showDetail(${idx})">${isFav?'&#9733; Favorito':'&#9734; Marcar favorito'}</button>
+    <button class="btn ${isCont?'btn-green':'btn-ghost'}" onclick="toggleContacted(${idx});showDetail(${idx})">${isCont?'&#10003; Contactado':'Marcar contactado'}</button>
+    ${d.url?`<a class="btn btn-ghost" href="${esc(d.url)}" target="_blank" style="text-decoration:none">Ver en Doctoralia</a>`:''}
+  </div>`;
+
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('modalBg').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+function toggleFav(idx){
+  const d=filtered[idx]; const id=uid(d);
+  if(favs[id]) delete favs[id]; else favs[id]=Date.now();
+  saveFavs(); updateSidebarStats(); render();
+}
+
+function toggleContacted(idx){
+  const d=filtered[idx]; const id=uid(d);
+  if(contacted[id]) delete contacted[id]; else contacted[id]=Date.now();
+  saveContacted(); updateSidebarStats(); render();
+}
+
+function saveNote(id){
+  const v=document.getElementById('modalNotes').value;
+  if(v) notes[id]=v; else delete notes[id];
+  saveNotes();
+}
+
+// Exports
+function exportCSV(){
+  const h=['Nombre','Especialidad','Ciudad','Telefono','Email','Instagram','Facebook','LinkedIn','YouTube','Twitter','Web','Direccion','Rating','Opiniones','Precio','Favorito','Contactado','Notas','URL'];
+  const rows=filtered.map(d=>{
+    const id=uid(d);
+    return[d.n,d.e,d.c,d.tel,d.em,d.ig,d.fb,d.li,d.yt,d.tw,d.web,d.dir,d.cal,d.op,d.pre,favs[id]?'Si':'',contacted[id]?'Si':'',notes[id]||'',d.url];
+  });
+  let csv='\uFEFF'+h.join(',')+'\n';
+  for(const r of rows) csv+=r.map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',')+'\n';
+  downloadFile(csv,'text/csv;charset=utf-8;',`leads_${filtered.length}_doctores.csv`);
+  toast(`CSV exportado: ${filtered.length} doctores`);
+}
+
+function exportContactados(){
+  const cont=filtered.filter(d=>contacted[uid(d)]);
+  if(!cont.length){toast('No hay leads contactados');return;}
+  const h=['Nombre','Especialidad','Ciudad','Telefono','Email','Instagram','Notas','URL'];
+  const rows=cont.map(d=>[d.n,d.e,d.c,d.tel,d.em,d.ig,notes[uid(d)]||'',d.url]);
+  let csv='\uFEFF'+h.join(',')+'\n';
+  for(const r of rows) csv+=r.map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',')+'\n';
+  downloadFile(csv,'text/csv;charset=utf-8;',`contactados_${cont.length}.csv`);
+  toast(`Exportados ${cont.length} leads contactados`);
+}
+
+function copyPhones(){
+  const phones=filtered.filter(d=>d.tel).map(d=>d.tel.split(',')[0].trim());
+  if(!phones.length){toast('No hay telefonos en los resultados');return;}
+  navigator.clipboard.writeText(phones.join('\n')).then(()=>toast(`${phones.length} telefonos copiados`));
+}
+
+function downloadFile(content,type,name){
+  const b=new Blob([content],{type});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',2500);
+}
+
+function extractHandle(url){
+  if(!url)return'';
+  try{const p=new URL(url.startsWith('//')?'https:'+url:url).pathname;const h=p.split('/').filter(Boolean).pop()||'';return h.length>22?h.substring(0,22)+'...':h;}catch{return url.substring(0,25);}
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+</script>
+</body>
+</html>
